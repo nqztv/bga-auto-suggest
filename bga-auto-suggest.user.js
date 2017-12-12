@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         bga-auto-suggest
 // @namespace    https://github.com/nqztv/bga-auto-suggest
-// @version      0.1
+// @version      0.2
 // @description  automatically suggest players to your table on bga.
 // @include      *.boardgamearena.com/*
 // @grant        none
