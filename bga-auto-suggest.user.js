@@ -20,7 +20,7 @@
 // VARIABLES TO SET USER PREFERENCE
 var minimumElo = 100;
 var blackList = [];
-var whiteList = [];
+var whiteList = ["nqztv", "insectman"];
 
 var alreadySuggested = [];
 
