@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         bga-auto-suggest
 // @namespace    https://github.com/nqztv/bga-auto-suggest
-// @version      0.2
-// @description  automatically suggest players to your table on bga.
+// @version      0.3
+// @description  automatically suggest players to your table on BGA.
 // @include      *.boardgamearena.com/*
 // @grant        none
 // ==/UserScript==
@@ -20,9 +20,13 @@
 // VARIABLES TO SET USER PREFERENCE
 var minimumElo = 100;
 var blackList = [];
-var whiteList = ["nqztv", "insectman"];
+var whiteList = ["nqztv", "insectman", "pnight"];
+var autoStartGame = false;	// start game when enough players?
 
+// INTERNAL VARIABLES
 var alreadySuggested = [];
+var suggestPlayers = true;
+var interrupted = false;
 
 function sleep(ms) {
 	return new Promise(resolve => setTimeout(resolve, ms));
@@ -36,25 +40,48 @@ function init() {
 	var autoSuggestButton = document.createElement("div");
 	autoSuggestButton.innerHTML = "Auto Suggest";
 	autoSuggestButton.setAttribute("id", "autosuggest");
+	autoSuggestButton.setAttribute("style", "display: inline;");
 	autoSuggestButton.className = "bgabutton bgabutton_gray tableaction";
 	bgaButtonBarNode.appendChild(autoSuggestButton);
 
+	var stopSuggestButton = document.createElement("div");
+	stopSuggestButton.innerHTML = "Stop Auto Suggest";
+	stopSuggestButton.setAttribute("id", "stopsuggest");
+	stopSuggestButton.setAttribute("style", "display: none;");
+	stopSuggestButton.className = "bgabutton bgabutton_gray tableaction";
+	bgaButtonBarNode.appendChild(stopSuggestButton);
+
 	document.getElementById("autosuggest").addEventListener("click", loop, false);
+	document.getElementById("stopsuggest").addEventListener("click", stopLoop, false);
+}
+
+async function stopLoop() {
+	suggestPlayers = false;
+	interrupted = true;
+	
+	// hide Stop Auto Suggest button, show Auto Suggest button
+	var autoSuggestButton = document.getElementById("autosuggest");
+	autoSuggestButton.setAttribute("style", "display: inline;");
+	var stopSuggestButton = document.getElementById("stopsuggest");
+	stopSuggestButton.setAttribute("style", "display: none;");
 }
 
 async function loop() {
 	console.log("Beginning auto suggestions...");
+	
+	if (autoStartGame) {
+		observeStartButton();
+	}
 
 	var availablePlayersNode = document.querySelector("#available_players_for_game");
 	var availablePlayers;
 	var tableID = window.location.href.split("table=")[1];
 	var index = 0;
-	var suggestPlayers = true;
 	var playerAttributes = [];
 	var playerName = "";
 	var playerElo = 0;
 	var playerID = "";  // technically a number, but just using it to concatenate to a url
-
+	
 	// only proceed if there is an available players node
 	if (availablePlayersNode) {
 		availablePlayers = availablePlayersNode.childNodes;
@@ -63,12 +90,25 @@ async function loop() {
 		return;
 	}
 
+	// show Stop Auto Suggest button, hide Auto Suggest button
+	var autoSuggestButton = document.getElementById("autosuggest");
+	autoSuggestButton.setAttribute("style", "display: none;");
+	var stopSuggestButton = document.getElementById("stopsuggest");
+	stopSuggestButton.setAttribute("style", "display: inline;");
+	
+	suggestPlayers = true;
+	interrupted = false;
 	while (suggestPlayers) {
 		console.log("current index is " + index + " out of " + availablePlayers.length);
 
 		if (index >= availablePlayers.length) {
 			index = 0;
 			suggestPlayers = false;
+			console.log("Finished. The next iteration is scheduled in 12 seconds.");
+			await sleep(12000);
+			if (!interrupted) {
+				loop();
+			}
 			return;
 		}
 		
@@ -164,6 +204,23 @@ function suggestPlayer(tableID, playerID) {
 	// {"status":1,"data":"ok"}
 	// {"status":"0","error":"You've already sent a suggestion to that player.","expected":1,"code":100}
 	// {"status":"0","error":"You need to wait 5 seconds between two suggestions.","expected":1,"code":100}
+}
+
+var isVisible = function(elem) {
+    return elem.offsetWidth !== 0 || elem.offsetHeight !== 0;
+}
+
+async function observeStartButton() {
+	var startGameButton = document.getElementById("startgame");
+
+	var enoughPlayers = false;
+	while (!enoughPlayers) {
+		await sleep(6000);
+		enoughPlayers = isVisible(startGameButton);
+	}
+	if (!interrupted) {
+		startGameButton.click();
+	}
 }
 
 window.onload = function() {
