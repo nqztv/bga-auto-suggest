@@ -89,6 +89,7 @@ async function loop() {
 	var index = 0;
 	var playerAttributes = [];
 	var playerName = "";
+	var playerStatus;
 	var playerElo = 0;
 	var playerID = "";  // technically a number, but just using it to concatenate to a url
 	
@@ -120,6 +121,8 @@ async function loop() {
 			await sleep(12000);
 			if (!interrupted) {
 				loop();
+			} else {
+				console.log("Auto suggestions process is interrupted by user.");
 			}
 			return;
 		}
@@ -162,6 +165,7 @@ async function loop() {
 		playerID = playerHTML.getElementsByTagName("a")[0].outerHTML.split("id=")[1].split('\">')[0];
 		playerName = playerHTML.getElementsByTagName("a")[0].innerText;
 		playerElo = playerHTML.querySelector(".gamerank_value").innerText;
+		playerStatus = playerHTML.querySelector("suggestsent");
 
 		// skip player if on the blacklist.
 		if (blackList.indexOf(playerName) != -1) {
@@ -179,8 +183,7 @@ async function loop() {
 		}
 		
 		// skip player if the player has already been suggested (probably manually prior to runninng this script) to play on this table.
-		var statusLabel = document.getElementById("suggestsent_" + playerID);
-		if (isVisible(statusLabel)) {
+		if (isVisible(playerStatus)) {
 			console.log(playerName + " is skipped because player has already been suggested.");
 			alreadySuggested.push(playerName);
 			++index;
