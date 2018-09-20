@@ -41,16 +41,17 @@ function init() {
 		return;
 	}
 
-	var autoSuggestButton = document.createElement("div");
-	autoSuggestButton.innerHTML = "Auto Suggest";
+	var autoSuggestButton = document.createElement("a");
+	autoSuggestButton.append("<span>Auto Suggest</span>");
 	autoSuggestButton.setAttribute("id", "autosuggest");
-	autoSuggestButton.setAttribute("style", "display: inline;");
+	autoSuggestButton.setAttribute("href", "#");
 	autoSuggestButton.className = "bgabutton bgabutton_gray tableaction";
 	bgaButtonBarNode.appendChild(autoSuggestButton);
 
-	var stopSuggestButton = document.createElement("div");
-	stopSuggestButton.innerHTML = "Stop Auto Suggest";
+	var stopSuggestButton = document.createElement("a");
+	stopSuggestButton.append("<span>Stop Auto Suggest</span>");
 	stopSuggestButton.setAttribute("id", "stopsuggest");
+	stopSuggestButton.setAttribute("href", "#");
 	stopSuggestButton.setAttribute("style", "display: none;");
 	stopSuggestButton.className = "bgabutton bgabutton_gray tableaction";
 	bgaButtonBarNode.appendChild(stopSuggestButton);
@@ -66,7 +67,7 @@ async function stopLoop() {
 	// hide Stop Auto Suggest button, show Auto Suggest button
 	var autoSuggestButton = document.getElementById("autosuggest");
 	if (autoSuggestButton)
-		autoSuggestButton.setAttribute("style", "display: inline;");
+		autoSuggestButton.removeAttribute("style");
 	var stopSuggestButton = document.getElementById("stopsuggest");
 	if (stopSuggestButton)
 		stopSuggestButton.setAttribute("style", "display: none;");
@@ -102,7 +103,7 @@ async function loop() {
 		autoSuggestButton.setAttribute("style", "display: none;");
 	var stopSuggestButton = document.getElementById("stopsuggest");
 	if (stopSuggestButton)
-		stopSuggestButton.setAttribute("style", "display: inline;");
+		stopSuggestButton.removeAttribute("style");
 	
 	suggestPlayers = true;
 	while (suggestPlayers) {
