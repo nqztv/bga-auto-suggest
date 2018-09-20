@@ -174,6 +174,15 @@ async function loop() {
 			index++;
 			continue;
 		}
+		
+		// skip player if the player has already been suggested (probably manually prior to runninng this script) to play on this table.
+		var statusLabel = document.findElementById("suggestsent_" + playerID);
+		if (isVisible(statusLabel)) {
+			console.log(playerName + " is skipped because player has already been suggested.");
+			alreadySuggested.push(playerName);
+			++index;
+			continue;
+		}
 
 		// skip if player does not meet minimum Elo.
 		if (playerElo < minimumElo) {
