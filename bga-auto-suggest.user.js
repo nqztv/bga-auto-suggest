@@ -46,7 +46,6 @@ function init() {
 	var autoSuggestButton = document.createElement("a");
 	autoSuggestButton.append(span);
 	autoSuggestButton.setAttribute("id", "autosuggest");
-	autoSuggestButton.setAttribute("href", "#");
 	autoSuggestButton.className = "bgabutton bgabutton_gray tableaction";
 	bgaButtonBarNode.appendChild(autoSuggestButton);
 
@@ -55,7 +54,6 @@ function init() {
 	var stopSuggestButton = document.createElement("a");
 	stopSuggestButton.append(span);
 	stopSuggestButton.setAttribute("id", "stopsuggest");
-	stopSuggestButton.setAttribute("href", "#");
 	stopSuggestButton.setAttribute("style", "display: none;");
 	stopSuggestButton.className = "bgabutton bgabutton_gray tableaction";
 	bgaButtonBarNode.appendChild(stopSuggestButton);
