@@ -36,6 +36,10 @@ function init() {
 	console.log("Creating auto suggest button.");
 
 	var bgaButtonBarNode = document.querySelector(".bgabuttonbar");
+	if (!bgaButtonBarNode) {
+		console.error("Please reload the page.");
+		return;
+	}
 
 	var autoSuggestButton = document.createElement("div");
 	autoSuggestButton.innerHTML = "Auto Suggest";
@@ -61,9 +65,11 @@ async function stopLoop() {
 	
 	// hide Stop Auto Suggest button, show Auto Suggest button
 	var autoSuggestButton = document.getElementById("autosuggest");
-	autoSuggestButton.setAttribute("style", "display: inline;");
+	if (autoSuggestButton)
+		autoSuggestButton.setAttribute("style", "display: inline;");
 	var stopSuggestButton = document.getElementById("stopsuggest");
-	stopSuggestButton.setAttribute("style", "display: none;");
+	if (stopSuggestButton)
+		stopSuggestButton.setAttribute("style", "display: none;");
 }
 
 async function loop() {
@@ -92,12 +98,13 @@ async function loop() {
 
 	// show Stop Auto Suggest button, hide Auto Suggest button
 	var autoSuggestButton = document.getElementById("autosuggest");
-	autoSuggestButton.setAttribute("style", "display: none;");
+	if (autoSuggestButton)
+		autoSuggestButton.setAttribute("style", "display: none;");
 	var stopSuggestButton = document.getElementById("stopsuggest");
-	stopSuggestButton.setAttribute("style", "display: inline;");
+	if (stopSuggestButton)
+		stopSuggestButton.setAttribute("style", "display: inline;");
 	
 	suggestPlayers = true;
-	interrupted = false;
 	while (suggestPlayers) {
 		console.log("current index is " + index + " out of " + availablePlayers.length);
 
@@ -105,6 +112,7 @@ async function loop() {
 			index = 0;
 			suggestPlayers = false;
 			console.log("Finished. The next iteration is scheduled in 12 seconds.");
+			interrupted = false;
 			await sleep(12000);
 			if (!interrupted) {
 				loop();
@@ -212,6 +220,8 @@ var isVisible = function(elem) {
 
 async function observeStartButton() {
 	var startGameButton = document.getElementById("startgame");
+	if (!startGameButton)
+		return;
 
 	var enoughPlayers = false;
 	while (!enoughPlayers) {
