@@ -32,9 +32,10 @@ function sleep(ms) {
 	return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-function init() {
+async function init() {
 	console.log("Creating auto suggest button.");
 
+	await sleep(2000);	// delay; the script is loaded faster then the BGA UI sometimes
 	var bgaButtonBarNode = document.querySelector(".bgabuttonbar");
 	if (!bgaButtonBarNode) {
 		console.error("Please reload the page.");
