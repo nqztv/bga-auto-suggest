@@ -41,15 +41,19 @@ function init() {
 		return;
 	}
 
+	var span = document.createElement("span");
+	span.innerHTML = "Auto Suggest";
 	var autoSuggestButton = document.createElement("a");
-	autoSuggestButton.append("<span>Auto Suggest</span>");
+	autoSuggestButton.append(span);
 	autoSuggestButton.setAttribute("id", "autosuggest");
 	autoSuggestButton.setAttribute("href", "#");
 	autoSuggestButton.className = "bgabutton bgabutton_gray tableaction";
 	bgaButtonBarNode.appendChild(autoSuggestButton);
 
+	var span = document.createElement("span");
+	span.innerHTML = "Stop Auto Suggest";
 	var stopSuggestButton = document.createElement("a");
-	stopSuggestButton.append("<span>Stop Auto Suggest</span>");
+	stopSuggestButton.append(span);
 	stopSuggestButton.setAttribute("id", "stopsuggest");
 	stopSuggestButton.setAttribute("href", "#");
 	stopSuggestButton.setAttribute("style", "display: none;");
@@ -225,7 +229,7 @@ function suggestPlayer(tableID, playerID) {
 }
 
 var isVisible = function(elem) {
-    return elem.offsetWidth !== 0 || elem.offsetHeight !== 0;
+    return elem && (elem.offsetWidth !== 0 || elem.offsetHeight !== 0);
 }
 
 async function observeStartButton() {
@@ -239,6 +243,7 @@ async function observeStartButton() {
 		enoughPlayers = isVisible(startGameButton);
 	}
 	if (!interrupted) {
+		console.log("Automatically starting game.");
 		startGameButton.click();
 	}
 }
