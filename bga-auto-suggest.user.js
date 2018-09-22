@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         bga-auto-suggest
 // @namespace    https://github.com/nqztv/bga-auto-suggest
-// @version      0.2
-// @description  automatically suggest players to your table on bga.
+// @version      0.3
+// @description  automatically suggest players to your table on BGA.
 // @include      *.boardgamearena.com/*
 // @grant        none
 // ==/UserScript==
@@ -20,41 +20,79 @@
 // VARIABLES TO SET USER PREFERENCE
 var minimumElo = 100;
 var blackList = [];
-var whiteList = ["nqztv", "insectman"];
+var whiteList = ["nqztv", "insectman", "pnight"];
+var autoStartGame = false;	// start game when enough players?
 
+// INTERNAL VARIABLES
 var alreadySuggested = [];
+var suggestPlayers = true;
+var interrupted = false;
 
 function sleep(ms) {
 	return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-function init() {
+async function init() {
 	console.log("Creating auto suggest button.");
 
+	await sleep(2000);	// delay; the script is loaded faster then the BGA UI sometimes
 	var bgaButtonBarNode = document.querySelector(".bgabuttonbar");
+	if (!bgaButtonBarNode) {
+		console.error("Please reload the page.");
+		return;
+	}
 
+	var span = document.createElement("span");
+	span.innerHTML = "Auto Suggest";
 	var autoSuggestButton = document.createElement("div");
-	autoSuggestButton.innerHTML = "Auto Suggest";
+	autoSuggestButton.append(span);
 	autoSuggestButton.setAttribute("id", "autosuggest");
 	autoSuggestButton.className = "bgabutton bgabutton_gray tableaction";
 	bgaButtonBarNode.appendChild(autoSuggestButton);
 
+	var span = document.createElement("span");
+	span.innerHTML = "Stop Auto Suggest";
+	var stopSuggestButton = document.createElement("div");
+	stopSuggestButton.append(span);
+	stopSuggestButton.setAttribute("id", "stopsuggest");
+	stopSuggestButton.setAttribute("style", "display: none;");
+	stopSuggestButton.className = "bgabutton bgabutton_gray tableaction";
+	bgaButtonBarNode.appendChild(stopSuggestButton);
+
 	document.getElementById("autosuggest").addEventListener("click", loop, false);
+	document.getElementById("stopsuggest").addEventListener("click", stopLoop, false);
+}
+
+async function stopLoop() {
+	suggestPlayers = false;
+	interrupted = true;
+	
+	// hide Stop Auto Suggest button, show Auto Suggest button
+	var autoSuggestButton = document.getElementById("autosuggest");
+	if (autoSuggestButton)
+		autoSuggestButton.setAttribute("style", "display: inline;");
+	var stopSuggestButton = document.getElementById("stopsuggest");
+	if (stopSuggestButton)
+		stopSuggestButton.setAttribute("style", "display: none;");
 }
 
 async function loop() {
 	console.log("Beginning auto suggestions...");
+	
+	if (autoStartGame) {
+		observeStartButton();
+	}
 
 	var availablePlayersNode = document.querySelector("#available_players_for_game");
 	var availablePlayers;
 	var tableID = window.location.href.split("table=")[1];
 	var index = 0;
-	var suggestPlayers = true;
 	var playerAttributes = [];
 	var playerName = "";
+	var playerStatus;
 	var playerElo = 0;
 	var playerID = "";  // technically a number, but just using it to concatenate to a url
-
+	
 	// only proceed if there is an available players node
 	if (availablePlayersNode) {
 		availablePlayers = availablePlayersNode.childNodes;
@@ -63,12 +101,29 @@ async function loop() {
 		return;
 	}
 
+	// show Stop Auto Suggest button, hide Auto Suggest button
+	var autoSuggestButton = document.getElementById("autosuggest");
+	if (autoSuggestButton)
+		autoSuggestButton.setAttribute("style", "display: none;");
+	var stopSuggestButton = document.getElementById("stopsuggest");
+	if (stopSuggestButton)
+		stopSuggestButton.setAttribute("style", "display: inline;");
+	
+	suggestPlayers = true;
 	while (suggestPlayers) {
 		console.log("current index is " + index + " out of " + availablePlayers.length);
 
 		if (index >= availablePlayers.length) {
 			index = 0;
 			suggestPlayers = false;
+			console.log("Finished. The next iteration is scheduled in 12 seconds.");
+			interrupted = false;
+			await sleep(12000);
+			if (!interrupted) {
+				loop();
+			} else {
+				console.log("Auto suggestions process is interrupted by user.");
+			}
 			return;
 		}
 		
@@ -110,6 +165,7 @@ async function loop() {
 		playerID = playerHTML.getElementsByTagName("a")[0].outerHTML.split("id=")[1].split('\">')[0];
 		playerName = playerHTML.getElementsByTagName("a")[0].innerText;
 		playerElo = playerHTML.querySelector(".gamerank_value").innerText;
+		playerStatus = playerHTML.querySelector("suggestsent");
 
 		// skip player if on the blacklist.
 		if (blackList.indexOf(playerName) != -1) {
@@ -123,6 +179,14 @@ async function loop() {
 			console.log(playerName + " is skipped because player has already been suggested.");
 			console.log(alreadySuggested);
 			index++;
+			continue;
+		}
+		
+		// skip player if the player has already been suggested (probably manually prior to runninng this script) to play on this table.
+		if (isVisible(playerStatus)) {
+			console.log(playerName + " is skipped because player has already been suggested.");
+			alreadySuggested.push(playerName);
+			++index;
 			continue;
 		}
 
@@ -164,6 +228,26 @@ function suggestPlayer(tableID, playerID) {
 	// {"status":1,"data":"ok"}
 	// {"status":"0","error":"You've already sent a suggestion to that player.","expected":1,"code":100}
 	// {"status":"0","error":"You need to wait 5 seconds between two suggestions.","expected":1,"code":100}
+}
+
+var isVisible = function(elem) {
+    return elem && (elem.offsetWidth !== 0 || elem.offsetHeight !== 0);
+}
+
+async function observeStartButton() {
+	var startGameButton = document.getElementById("startgame");
+	if (!startGameButton)
+		return;
+
+	var enoughPlayers = false;
+	while (!enoughPlayers) {
+		await sleep(6000);
+		enoughPlayers = isVisible(startGameButton);
+	}
+	if (!interrupted) {
+		console.log("Automatically starting game.");
+		startGameButton.click();
+	}
 }
 
 window.onload = function() {
