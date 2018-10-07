@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         bga-auto-suggest
 // @namespace    https://github.com/nqztv/bga-auto-suggest
-// @version      0.3
+// @version      0.3.1
 // @description  automatically suggest players to your table on BGA.
 // @include      *.boardgamearena.com/*
 // @grant        none
@@ -11,8 +11,10 @@
 // suggested to that table. bga also limits you to 1 suggestion every 5 seconds.
 // so manually suggesting players to your table can be a tedious process. 
 // insectman from the perudo community wrote an proof of concept script to 
-// automate this process. i rewrote his script to work as a user script on 
+// automate this process. @nqztv rewrote his script to work as a user script on
 // greasemonkey or tampermonkey while taking away dependencies and stuff.
+// @naXa777 modified this script so it works endlessly until the user interrupts
+// it by pressing STOP button.
 //
 // you can adjust the minimum Elo, add people to the white list, or add people 
 // to a blacklist below if you wish to.
@@ -89,9 +91,25 @@ async function loop() {
 	var index = 0;
 	var playerAttributes = [];
 	var playerName = "";
-	var playerStatus;
-	var playerElo = 0;
-	var playerID = "";  // technically a number, but just using it to concatenate to a url
+    /**
+     * Caption: Suggestion sent!
+     */
+	var playerStatus,
+        /**
+         * Button: Suggest joining table
+         */
+        playerSuggestButton;
+    /**
+     * Player ELO
+     * @type {number}
+     */
+    var playerElo = 0;
+    /**
+     * Player ID.
+     * Technically a number, but just using it to concatenate to a url
+     * @type {string}
+     */
+	var playerID = "";
 	
 	// only proceed if there is an available players node
 	if (availablePlayersNode) {
@@ -165,7 +183,8 @@ async function loop() {
 		playerID = playerHTML.getElementsByTagName("a")[0].outerHTML.split("id=")[1].split('\">')[0];
 		playerName = playerHTML.getElementsByTagName("a")[0].innerText;
 		playerElo = playerHTML.querySelector(".gamerank_value").innerText;
-		playerStatus = playerHTML.querySelector("suggestsent");
+		playerStatus = document.getElementById("suggestsent_" + playerID);
+		playerSuggestButton = document.getElementById("suggestjoin_" + playerID);
 
 		// skip player if on the blacklist.
 		if (blackList.indexOf(playerName) != -1) {
@@ -182,8 +201,8 @@ async function loop() {
 			continue;
 		}
 		
-		// skip player if the player has already been suggested (probably manually prior to runninng this script) to play on this table.
-		if (isVisible(playerStatus)) {
+		// skip player if the player has already been suggested (probably manually prior to running this script) to play on this table.
+		if (!isVisible(playerSuggestButton)) {
 			console.log(playerName + " is skipped because player has already been suggested.");
 			alreadySuggested.push(playerName);
 			++index;
@@ -230,7 +249,7 @@ function suggestPlayer(tableID, playerID) {
 	// {"status":"0","error":"You need to wait 5 seconds between two suggestions.","expected":1,"code":100}
 }
 
-var isVisible = function(elem) {
+function isVisible(elem) {
     return elem && (elem.offsetWidth !== 0 || elem.offsetHeight !== 0);
 }
 
