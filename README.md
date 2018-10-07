@@ -16,11 +16,33 @@ You can view the web console to see the status of the script or to see if there 
 
 ![Auto Suggest button](/new_button.png)
 
+## Development
+
+JavaScript language version: ECMAScript 6.
+
+If you use IntelliJ IDEA select the Javascript language version in the settings:
+
+1. Go to File > Settings... > Language & Frameworks > Javascript
+2. Select 'ECMAScript 6' in JS version dropdown
+
+Test your changes manually before submitting:
+
+1. Reload page
+2. Copy-paste the script into Web console, click [ENTER]
+3. Invoke `init()` function
+
 ## Changes history
 
+This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+### [v0.1] - 2017-10-02
 * insectman from the Perudo community wrote a proof of concept script to automate this process (https://pastebin.com/4eW7ugTs).
+### [v0.2] - 2017-12-12
 * @nqztv rewrote his script to work as a user script on greasemonkey or tampermonkey while taking away dependencies and stuff. 
+### [v0.3] - 2018-09-02
 * @naXa777 modified this script so it works endlessly until the user interrupts it by pressing STOP button.
+### [v0.3.1] - 2018-10-07
+* @naXa777 fixed a bug: the script wasted 6 seconds trying to invite users that have been invited already (e.g. manually prior to running the main loop).
 
 ## External links
 
