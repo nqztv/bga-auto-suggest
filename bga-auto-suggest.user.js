@@ -3,18 +3,18 @@
 // @namespace    https://github.com/nqztv/bga-auto-suggest
 // @version      0.3
 // @description  automatically suggest players to your table on BGA.
-// @include      *.boardgamearena.com/*
+// @include      *boardgamearena.com/*
 // @grant        none
 // ==/UserScript==
-// 
+//
 // on boardgamearena.com, players will often not join your table unless they are
 // suggested to that table. bga also limits you to 1 suggestion every 5 seconds.
-// so manually suggesting players to your table can be a tedious process. 
-// insectman from the perudo community wrote an proof of concept script to 
-// automate this process. i rewrote his script to work as a user script on 
+// so manually suggesting players to your table can be a tedious process.
+// insectman from the perudo community wrote an proof of concept script to
+// automate this process. i rewrote his script to work as a user script on
 // greasemonkey or tampermonkey while taking away dependencies and stuff.
 //
-// you can adjust the minimum Elo, add people to the white list, or add people 
+// you can adjust the minimum Elo, add people to the white list, or add people
 // to a blacklist below if you wish to.
 
 // VARIABLES TO SET USER PREFERENCE
@@ -36,11 +36,20 @@ async function init() {
 	console.log("Creating auto suggest button.");
 
 	await sleep(2000);	// delay; the script is loaded faster then the BGA UI sometimes
-	var bgaButtonBarNode = document.querySelector(".bgabuttonbar");
+
+	var pageHeaderNode = document.querySelector("#pageheader");
+	if (!pageHeaderNode) {
+		console.error("pageheader node not found.");
+		return;
+	}
+
+	var bgaButtonBarNode = pageHeaderNode.querySelectorAll(".bgabuttonbar")[1];
 	if (!bgaButtonBarNode) {
 		console.error("Please reload the page.");
 		return;
 	}
+	console.log("bgaButtonBar found.");
+
 
 	var span = document.createElement("span");
 	span.innerHTML = "Auto Suggest";
@@ -50,10 +59,10 @@ async function init() {
 	autoSuggestButton.className = "bgabutton bgabutton_gray tableaction";
 	bgaButtonBarNode.appendChild(autoSuggestButton);
 
-	var span = document.createElement("span");
-	span.innerHTML = "Stop Auto Suggest";
+	var stopSpan = document.createElement("span");
+	stopSpan.innerHTML = "Stop Auto Suggest";
 	var stopSuggestButton = document.createElement("div");
-	stopSuggestButton.append(span);
+	stopSuggestButton.append(stopSpan);
 	stopSuggestButton.setAttribute("id", "stopsuggest");
 	stopSuggestButton.setAttribute("style", "display: none;");
 	stopSuggestButton.className = "bgabutton bgabutton_gray tableaction";
@@ -66,19 +75,21 @@ async function init() {
 async function stopLoop() {
 	suggestPlayers = false;
 	interrupted = true;
-	
+
 	// hide Stop Auto Suggest button, show Auto Suggest button
 	var autoSuggestButton = document.getElementById("autosuggest");
-	if (autoSuggestButton)
+	if (autoSuggestButton) {
 		autoSuggestButton.setAttribute("style", "display: inline;");
+	}
 	var stopSuggestButton = document.getElementById("stopsuggest");
-	if (stopSuggestButton)
+	if (stopSuggestButton) {
 		stopSuggestButton.setAttribute("style", "display: none;");
+	}
 }
 
 async function loop() {
 	console.log("Beginning auto suggestions...");
-	
+
 	if (autoStartGame) {
 		observeStartButton();
 	}
@@ -91,8 +102,8 @@ async function loop() {
 	var playerName = "";
 	var playerStatus;
 	var playerElo = 0;
-	var playerID = "";  // technically a number, but just using it to concatenate to a url
-	
+	var playerID = ""; // technically a number, but just using it to concatenate to a url
+
 	// only proceed if there is an available players node
 	if (availablePlayersNode) {
 		availablePlayers = availablePlayersNode.childNodes;
@@ -103,12 +114,14 @@ async function loop() {
 
 	// show Stop Auto Suggest button, hide Auto Suggest button
 	var autoSuggestButton = document.getElementById("autosuggest");
-	if (autoSuggestButton)
+	if (autoSuggestButton) {
 		autoSuggestButton.setAttribute("style", "display: none;");
+	}
 	var stopSuggestButton = document.getElementById("stopsuggest");
-	if (stopSuggestButton)
+	if (stopSuggestButton) {
 		stopSuggestButton.setAttribute("style", "display: inline;");
-	
+	}
+
 	suggestPlayers = true;
 	while (suggestPlayers) {
 		console.log("current index is " + index + " out of " + availablePlayers.length);
@@ -126,7 +139,7 @@ async function loop() {
 			}
 			return;
 		}
-		
+
 		// OLD WAY TO GET PLAYER ATTRIBUTES... playerID and playerName do not match sometimes with this method.
 		//playerAttributes = availablePlayers[index].innerText.split("\n").map(attribute => attribute.trim());
 		//playerAttributes = availablePlayers[index].innerHTML;
@@ -181,7 +194,7 @@ async function loop() {
 			index++;
 			continue;
 		}
-		
+
 		// skip player if the player has already been suggested (probably manually prior to runninng this script) to play on this table.
 		if (isVisible(playerStatus)) {
 			console.log(playerName + " is skipped because player has already been suggested.");
@@ -202,13 +215,13 @@ async function loop() {
 		suggestPlayer(tableID, playerID);
 
 		console.log("Waiting 5 seconds.");
-		await sleep(6000);  // actually waiting 6 seconds because bga is still giving 5 second warning when set to 5001.
+		await sleep(6000); // actually waiting 6 seconds because bga is still giving 5 second warning when set to 5001.
 	}
 }
 
 function suggestPlayer(tableID, playerID) {
-	var fetchRequest = new Request("https://en.boardgamearena.com/gamelobby/gamelobby/suggest.html?table=" + tableID + "&player=" + playerID);
-	var fetchInit = { method: 'GET', mode: 'cors', credentials: "include" };  // make sure to send credentials or you will get "you are not the admin" warnings.
+	var fetchRequest = new Request("https://boardgamearena.com/gamelobby/gamelobby/suggest.html?table=" + tableID + "&player=" + playerID + "&dojo.preventCache=1586324438299");
+	var fetchInit = { method: 'GET', mode: 'cors', credentials: "include" }; // make sure to send credentials or you will get "you are not the admin" warnings.
 	fetch(fetchRequest, fetchInit)
 	.then(function(response) {
 		return response.json();
@@ -231,13 +244,14 @@ function suggestPlayer(tableID, playerID) {
 }
 
 var isVisible = function(elem) {
-    return elem && (elem.offsetWidth !== 0 || elem.offsetHeight !== 0);
+	return elem && (elem.offsetWidth !== 0 || elem.offsetHeight !== 0);
 }
 
 async function observeStartButton() {
 	var startGameButton = document.getElementById("startgame");
-	if (!startGameButton)
+	if (!startGameButton) {
 		return;
+	}
 
 	var enoughPlayers = false;
 	while (!enoughPlayers) {
@@ -252,7 +266,9 @@ async function observeStartButton() {
 
 window.onload = function() {
 	// tampermonkey doesn't support '#' in the url (see https://tampermonkey.net/documentation.php#_include), so check if on a table here before continuing.
-	if (window.location.href.includes("#!table?table=")) {
+	console.log("hello");
+	if (window.location.href.includes("table?table=")) {
+		console.log("init");
 		init();
 	}
 };
